@@ -1,43 +1,58 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React,  { useState } from 'react'
+import Grid from '@mui/material/Grid2';
+import { Button, TextField } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom'
+import axiosInstance from '../axiosInterceptor';
 
-function Register() {
-  const [form, setForm] = useState({ username: '', password: '', role: 'user' });
+const Signup = () => {
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('/api/register', form);
-      alert('User registered successfully');
-    } catch (err) {
-      alert('Error registering user');
+    const [form, setForm] = useState({
+        email: '',
+        password: '',
+        confirmpassword: '',
+    });
+    const navigate = useNavigate();
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+      };
+
+
+    const handleSubmit = async () =>{
+        if (form.password !== form.confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+        try {
+            const response = await axiosInstance.post('http://localhost:3000/users/adduser', form);
+            alert(response.data);
+            setForm({ email: '', password: '', confirmpassword:''}); // Reset form
+            navigate('/'); 
+          } catch (error) {
+            alert('Failed to Signup. Please try again.');
+            console.error(error);
+          }
     }
-  };
-
   return (
-    <form onSubmit={handleRegister}>
-      <input
-        type="text"
-        placeholder="Username"
-        value={form.username}
-        onChange={(e) => setForm({ ...form, username: e.target.value })}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-      />
-      <select
-        value={form.role}
-        onChange={(e) => setForm({ ...form, role: e.target.value })}
-      >
-        <option value="user">User</option>
-        <option value="admin">Admin</option>
-      </select>
-      <button type="submit">Register</button>
-    </form>
-  );
+    <div style={{margin:'8%'}}>
+        <Grid container spacing={2}>
+            <Grid  size={{ xs: 6, md: 6 }}>
+                <TextField fullWidth label='Email' name="email" onChange={handleChange} variant='outlined'></TextField>
+            </Grid>
+            <Grid size={{ xs: 6, md: 6 }}>
+                <TextField fullWidth label='Password' name="password" type="password" onChange={handleChange}  variant='outlined'></TextField>
+            </Grid>
+            <Grid size={{ xs: 6, md: 6 }}>
+                <TextField fullWidth label='Confirm Password'name="confirmPassword" type="password" onChange={handleChange} variant='outlined'></TextField>
+            </Grid>
+            <Grid size={{ xs: 12, md: 12 }}>
+                <Button color="secondary" variant='contained' onClick={handleSubmit}>Register</Button>
+            </Grid>
+            <Grid size={{ xs: 12, md: 12 }}>
+                <Link to={'/'} style={{color: 'purple'}}>Already Registered? Login here</Link>
+            </Grid>
+        </Grid>
+    </div>
+  )
 }
 
-export default Register;
+export default Signup

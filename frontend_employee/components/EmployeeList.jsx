@@ -1,42 +1,78 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react'
+import { Button, Card, CardActions, CardContent, CardMedia, Typography } from '@mui/material'
+import Grid from '@mui/material/Grid2';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../axiosInterceptor';
 
-function EmployeeList() {
-  const [employees, setEmployees] = useState([]);
+const Home = () => {
 
-  const fetchEmployees = async () => {
-    const token = localStorage.getItem('token');
-    const res = await axios.get('/api/employees', {
-      headers: { Authorization: token },
-    });
-    setEmployees(res.data);
-  };
+    const [cardData,setData] = useState([]);
+    const navigate = useNavigate();
+    const role = sessionStorage.getItem('role');
+    
+    useEffect(() =>{
+        axiosInstance.get('http://localhost:3000/employees').then((res) =>{
+            setData(res.data);
+        }).catch((err)=>{
+            console.log(err)
+        })
+    },[])
+    function update_data(val){
+        navigate('/addemployee',{state:{val}})
+        //state is a keyword
+    }
 
-  const handleDelete = async (id) => {
-    const token = localStorage.getItem('token');
-    await axios.delete(`/api/employees/${id}`, {
-      headers: { Authorization: token },
-    });
-    fetchEmployees();
-  };
+    const delete_data = (id) => {
+        axiosInstance.delete(`http://localhost:3000/employees/deleteemployee/${id}`)
+          .then(() => {
+            setData(cardData.filter((item) => item._id !== id)); // Update the UI after deletion
+            alert("Employee deleted successfully");
+            navigate('/employees'); // Navigate back to the Home page
+          })
+          .catch((err) => {
+            console.log(err);
+            alert("Failed to delete employee");
+          });
+      };
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
 
   return (
-    <div>
-      <h1>Employees</h1>
-      <ul>
-        {employees.map((emp) => (
-          <li key={emp._id}>
-            {emp.name} - {emp.designation}{' '}
-            <button onClick={() => handleDelete(emp._id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+    <div style={{margin:'5%'}}>
+        <Grid container spacing={2}>
+            {cardData.map((row) => (
+            <Grid size={4}>
+            <Card sx={{ maxWidth: 345 }}>
+                
+                <CardContent>
+                    <Typography gutterBottom variant="h5" component="div">
+                    {row.name}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {row.designation}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {row.salary}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {row.department}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {row.emplocation}
+                    </Typography>
+                </CardContent>
+                {role == 'Admin' && (
+                <CardActions>
+                    <Button size="small" color='warning' variant='contained'onClick={(()=>{update_data(row);})}>Update</Button>
+                    <Button size="small" color='error' variant='contained' onClick={() => delete_data(row._id)}>Delete</Button>
+                </CardActions>
+                )}
+            </Card>
+            </Grid>
+            ))}
+        </Grid>
+        
     </div>
-  );
+  )
 }
 
-export default EmployeeList;
+export default Home
